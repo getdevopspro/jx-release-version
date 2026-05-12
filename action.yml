@@ -60,3 +60,4 @@ runs:
     GIT_TOKEN: ${{ inputs.github-token }}
     GIT_NAME: ${{ inputs.git-user }}
     GIT_EMAIL: ${{ inputs.git-email }}
+    JX_LOG_LEVEL: debug
