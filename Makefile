@@ -21,6 +21,9 @@ GO_VERSION := $(shell $(GO) version | sed -e 's/^[^0-9.]*\([0-9.]*\).*/\1/')
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
 BUILD_DIR ?= ./bin
+
+MULTIARCH_IMAGE := ghcr.io/getdevopspro/jx-release-version
+MULTIARCH_PLATFORMS := linux/amd64,linux/arm64
 BUILDFLAGS := -ldflags \
   " -X main.Version=$(VERSION)\
     -X main.Revision='$(REV)'\
@@ -59,5 +62,20 @@ clean:
 	rm -rf dist
 
 .PHONY: docker
-docker: $(BUILD_DIR)/$(NAME)-linux
-	docker build -t "${ORG}/$(NAME):dev" .
+docker:
+	docker build \
+		--build-arg VERSION=$(VERSION) \
+		--build-arg REVISION=$(REV) \
+		--build-arg BUILD_DATE=$(BUILD_DATE) \
+		-t "$(ORG)/$(NAME):dev" .
+
+.PHONY: docker-buildx
+docker-buildx: ## Build and push multi-arch Docker image to ghcr.io
+	docker buildx build \
+		--platform $(MULTIARCH_PLATFORMS) \
+		--build-arg VERSION=$(VERSION) \
+		--build-arg REVISION=$(REV) \
+		--build-arg BUILD_DATE=$(BUILD_DATE) \
+		-t $(MULTIARCH_IMAGE):$(VERSION) \
+		--push \
+		.
